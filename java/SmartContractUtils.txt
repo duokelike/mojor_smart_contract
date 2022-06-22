@@ -1,0 +1,15 @@
+//计算部署合约地址
+private String calculateContractAddress(String address,long nonce){
+        byte[]addressAsBytes=Numeric.hexStringToByteArray(address);
+
+        byte[]calculatedAddressAsBytes=
+        Hash.sha3(RlpEncoder.encode(
+        new RlpList(
+        RlpString.create(addressAsBytes),
+        RlpString.create((nonce)))));
+
+        calculatedAddressAsBytes=Arrays.copyOfRange(calculatedAddressAsBytes,
+        12,calculatedAddressAsBytes.length);
+        String calculatedAddressAsHex=Numeric.toHexString(calculatedAddressAsBytes);
+        return calculatedAddressAsHex;
+}
