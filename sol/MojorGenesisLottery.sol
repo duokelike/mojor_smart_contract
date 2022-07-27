@@ -7,13 +7,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
-    event paramTimeEvent      (uint  parmsTime);
+
     event addMintParticipantEvent      (address  ads);
-    event luckyWinnerBirthEvent    (address  ads,uint tokenId);
+    event luckyWinnerBirthEvent    (address  ads);
     event luckyNumBirthEvent       (uint  noc);
     mapping(address => uint) public participants;
     mapping(uint => address) public participantMaps;
-    mapping(address => bool) public minterMaps;
+    mapping(address => bool) public MinterMaps;
     address[10000] public whiteList;
     bytes32 public lotteryParmOne;
     mapping(uint => uint) public winner;
@@ -22,6 +22,7 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
     uint public whiteListNo=0;
     uint public mintStartTime;
     uint public mintEndTime;
+    uint[] public luckContainer;
 
     constructor() ERC721("Mojor Genesis Lottery", "Mojor Genesis Lottery") {
     }
@@ -30,7 +31,7 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
         require(block.timestamp >= mintStartTime, "Mint hasn't started yet");
         require(block.timestamp <= mintEndTime,"Mint has ended");
         require(participants[msg.sender]==0,"Can only be mint once");
-        require(minterMaps[msg.sender],"You are not eligible for mint");
+        require(MinterMaps[msg.sender],"You are not eligible for mint");
         require(no<10000,"Maximum limit 10000");
         _safeMint(msg.sender, no);
         _setTokenURI(no, uri);
@@ -52,7 +53,7 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
         participantMaps[no]=omission;
         lotteryParmOne=blockhash(block.number -1);
         whiteList[whiteListNo]=omission;
-        minterMaps[omission]=true;
+        MinterMaps[omission]=true;
         no++;
         whiteListNo++;
     }
@@ -77,7 +78,7 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
 
 
     function isValid(address participant) public view returns(bool){
-        return minterMaps[participant];
+        return MinterMaps[participant];
     }
 
 
@@ -91,22 +92,68 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
         uint whiteListNumSNow=whiteListNo+1;
         require(whiteListNumSNow<10000,"Maximum limit 10000");
         whiteList[whiteListNo]=ads;
-        minterMaps[ads]=true;
+        MinterMaps[ads]=true;
         whiteListNo++;
         emit addMintParticipantEvent(ads);
 
     }
 
-    function addMintAccountBatch(address[]  memory addrs) public  onlyOwner{
+    function addMintAccountTen(address[10]  memory addrs) public  onlyOwner{
         uint whiteListNumSNow=whiteListNo+addrs.length;
         require(whiteListNumSNow<10000,"Maximum limit 10000");
         for(uint i = 0; i < addrs.length; i++){
             whiteList[whiteListNo]=addrs[i];
-            minterMaps[addrs[i]]=true;
+            MinterMaps[addrs[i]]=true;
+            whiteListNo++;
+            emit addMintParticipantEvent(addrs[i]);
+        }
+
+    }
+
+    function addMintAccountFifty(address[50]  memory addrs) public  onlyOwner{
+        uint whiteListNumSNow=whiteListNo+addrs.length;
+        require(whiteListNumSNow<10000,"Maximum limit 10000");
+        for(uint i = 0; i < addrs.length; i++){
+            whiteList[whiteListNo]=addrs[i];
+            MinterMaps[addrs[i]]=true;
             whiteListNo++;
             emit addMintParticipantEvent(addrs[i]);
         }
     }
+
+    function addMintAccountHundred(address[100]  memory addrs) public  onlyOwner{
+        uint whiteListNumSNow=whiteListNo+addrs.length;
+        require(whiteListNumSNow<10000,"Maximum limit 10000");
+        for(uint i = 0; i < addrs.length; i++){
+            whiteList[whiteListNo]=addrs[i];
+            MinterMaps[addrs[i]]=true;
+            whiteListNo++;
+            emit addMintParticipantEvent(addrs[i]);
+        }
+    }
+
+    function addMintAccountFiveHundred(address[500]  memory addrs) public  onlyOwner{
+        uint whiteListNumSNow=whiteListNo+addrs.length;
+        require(whiteListNumSNow<10000,"Maximum limit 10000");
+        for(uint i = 0; i < addrs.length; i++){
+            whiteList[whiteListNo]=addrs[i];
+            MinterMaps[addrs[i]]=true;
+            whiteListNo++;
+            emit addMintParticipantEvent(addrs[i]);
+        }
+    }
+
+    function addMintAccountThousand(address[1000]  memory addrs) public  onlyOwner{
+        uint whiteListNumSNow=whiteListNo+addrs.length;
+        require(whiteListNumSNow<10000,"Maximum limit 10000");
+        for(uint i = 0; i < addrs.length; i++){
+            whiteList[whiteListNo]=addrs[i];
+            MinterMaps[addrs[i]]=true;
+            whiteListNo++;
+            emit addMintParticipantEvent(addrs[i]);
+        }
+    }
+
 
 
     function takeLuckyOne() public onlyOwner returns(address){
@@ -117,56 +164,43 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
         uint  luckyNum=parmsTotal % no;
         emit luckyNumBirthEvent(luckyNum);
         lucky= participantMaps[luckyNum];
-        emit luckyWinnerBirthEvent(lucky,luckyNum);
+        emit luckyWinnerBirthEvent(lucky);
         winner[winNo]=luckyNum;
         winNo++;
         return lucky;
     }
 
-    function takeDiffLuckOne(uint num) public onlyOwner returns(uint){
-        uint  parmsOne=getNumber(lotteryParmOne);
-        uint  parmstwo=getNumber(blockhash(block.number - num));
-        uint  parmsTotal=parmsOne*parmstwo * ((block.timestamp)/ num);
-        uint  luckyNum=parmsTotal % no;
-        return luckyNum;
-    }
 
-
-    function takeLuckyTimes(uint times) public  onlyOwner {
-        uint[1000] memory lucks;
+    function takeLuckyTimes(uint times) public  onlyOwner returns(uint[] memory){
+        uint[] memory wins;
         uint idx=0;
-        bool rp=true;
-        uint ft= times;
-        uint luckyNum;
-        address lucky;
-        require(times>0,"Must more than one");
-        require(times<no,"Must less than account nums");
+        uint parmsThree =0;
         for(uint t=0;t<times;t++){
-            while(rp){
-                rp=false;
-                ft++;
-                emit paramTimeEvent(ft);
-                luckyNum=takeDiffLuckOne(ft);
-                emit luckyNumBirthEvent(luckyNum);
-                lucky= participantMaps[luckyNum];
-                //check Diff
-                for(uint l=0; l<lucks.length ;l++){
-                    if(lucks[l] == luckyNum){
-                        rp=true;
-                    }
-                }
-                if(!rp){
-                    emit luckyWinnerBirthEvent(lucky,luckyNum);
-                    winner[winNo]=luckyNum;
-                    winNo++;
-                    lucks[idx]=luckyNum;
-                    idx++;
-                }
-
+            address lucky;
+            uint  parmsOne=getNumber(lotteryParmOne);
+            uint  parmstwo=getNumber(blockhash(block.number - 1));
+            uint  parmsTotal=parmsOne*parmstwo*block.timestamp;
+            if(parmsThree>0){
+                parmsTotal=parmsTotal*parmsThree;
             }
-            rp=true;
+            uint luckyNum=parmsTotal % no;
+            emit luckyNumBirthEvent(luckyNum);
+            lucky= participantMaps[luckyNum];
+            emit luckyWinnerBirthEvent(lucky);
+            winner[winNo]=luckyNum;
+            parmsThree=luckyNum;
+            winNo++;
+            wins[idx]=luckyNum;
+            idx++;
         }
+        luckContainer=wins;
+        return wins;
     }
+
+    function getLuckContainer()public view returns(uint[] memory){
+        return luckContainer;
+    }
+
 
     function _toBytes(address a) internal pure returns (bytes memory b) {
         assembly {
@@ -199,18 +233,5 @@ contract MojorGenesisLottery is ERC721, ERC721URIStorage,Ownable {
         return 1;
     }
 
-
-//    function test(address[] memory das)public  {
-//        for(uint a=0;a<das.length;a++){
-//            _safeMint(das[a], no);
-//            _setTokenURI(no, "");
-//            participants[das[a]]=1;
-//            participantMaps[no]=das[a];
-//            lotteryParmOne=blockhash(block.number -1);
-//            whiteList[whiteListNo]=das[a];
-//            no++;
-//            whiteListNo++;
-//        }
-//    }
 
 }
